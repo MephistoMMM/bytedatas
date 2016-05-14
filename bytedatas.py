@@ -110,31 +110,23 @@ class ByteDatas(bytearray):
     def __init__(self, *args, **kargs):
         super().__init__(*args, **kargs)
 
-        for i in VALID_BIT_LENGTH_OF_INT:
-            setattr(self, "write_uint{}".format(i), 
-                    self.__create_write_int_method(i, True))
-            setattr(self, "write_int{}".format(i),
-                    self.__create_write_int_method(i))
-            setattr(self, "read_uint{}".format(i), 
-                    self.__create_read_int_method(i, True))
-            setattr(self, "read_int{}".format(i),
-                    self.__create_read_int_method(i))
 
-    def __create_write_int_method(self, bit_len, unsigned=False):
+    @classmethod
+    def create_write_int_method(cls, bit_len, unsigned=False):
         """
         This function will create write method for any int type.
         Without this function , you may should write 8 methods totally for 
         writing int types.
         """
         byte_len = bit_len // 8
-        def write_method(seat, value):
+        def write_method(self, seat, value):
             """
             Write an int, whose signed depends on variate 'unsigned' and
             length of bits depends on variate 'bit_len', into bytedatas.
             If sucess, return True.
             """
-            for i in range(byte_len):
-                super(ByteDatas, self).__setitem__(seat+i, value & 0xFF)
+            for offset in range(byte_len):
+                super(cls, self).__setitem__(seat+offset, value & 0xFF)
                 value >>= 8
             return True
 
@@ -142,21 +134,22 @@ class ByteDatas(bytearray):
         # for method
         return parament_int(bit_len, unsigned=unsigned)(write_method)
 
-    def __create_read_int_method(self, bit_len, unsigned=False):
+    @classmethod
+    def create_read_int_method(cls, bit_len, unsigned=False):
         """
         This function will create read method for any int type.
         Without this function , you may should write 8 methods totally for 
         reading int types.
         """
         byte_len = bit_len // 8
-        def read_method(seat):
+        def read_method(self, seat):
             """
             read an int, whose signed depends on variate 'unsigned' and
             length of bits depends on variate 'bit_len', from bytedatas.
             """
             value = 0
-            for i in range(byte_len):
-                value += super(ByteDatas, self).__getitem__(seat+i) << (i*8)
+            for offset in range(byte_len):
+                value += super(cls, self).__getitem__(seat+offset) << (offset*8)
             return value
 
         # call parament_int function to generate an appropriate decorator 
@@ -180,3 +173,13 @@ class ByteDatas(bytearray):
         # return super().__getitem__(seat)
 
 
+# set methods for bytedats
+for i in VALID_BIT_LENGTH_OF_INT:
+    setattr(ByteDatas, "write_uint{}".format(i), 
+            ByteDatas.create_write_int_method(i, True))
+    setattr(ByteDatas, "write_int{}".format(i),
+            ByteDatas.create_write_int_method(i))
+    setattr(ByteDatas, "read_uint{}".format(i), 
+            ByteDatas.create_read_int_method(i, True))
+    setattr(ByteDatas, "read_int{}".format(i),
+            ByteDatas.create_read_int_method(i))
