@@ -109,16 +109,22 @@ class ByteDatas(bytearray):
 
     def __init__(self, *args, **kargs):
         super().__init__(*args, **kargs)
-        setattr(self, "write_uint{}".format(8), 
-                self.__create_write_int_method(8, True))
-        setattr(self, "write_int{}".format(8),
-                self.__create_write_int_method(8))
+
+        for i in VALID_BIT_LENGTH_OF_INT:
+            setattr(self, "write_uint{}".format(i), 
+                    self.__create_write_int_method(i, True))
+            setattr(self, "write_int{}".format(i),
+                    self.__create_write_int_method(i))
+            setattr(self, "read_uint{}".format(i), 
+                    self.__create_read_int_method(i, True))
+            setattr(self, "read_int{}".format(i),
+                    self.__create_read_int_method(i))
 
     def __create_write_int_method(self, bit_len, unsigned=False):
         """
         This function will create write method for any int type.
         Without this function , you may should write 8 methods totally for 
-        int types.
+        writing int types.
         """
         byte_len = bit_len // 8
         def write_method(seat, value):
@@ -136,22 +142,27 @@ class ByteDatas(bytearray):
         # for method
         return parament_int(bit_len, unsigned=unsigned)(write_method)
 
-    # @parament_int(8, unsigned=True)
-    # def write_uint8(self, seat, value):
-        # """
-        # Write an 8-bit-length unsigned int into bytearray
-        # If sucess, return True.
-        # """
-        # super().__setitem__(seat, value)
-        # return True
-
-    @return_int(8, unsigned=True)
-    def read_uint8(self, seat):
+    def __create_read_int_method(self, bit_len, unsigned=False):
         """
-        Read an 8-bit-length unsigned int from bytearray
+        This function will create read method for any int type.
+        Without this function , you may should write 8 methods totally for 
+        reading int types.
         """
-        return super().__getitem__(seat)
+        byte_len = bit_len // 8
+        def read_method(seat):
+            """
+            read an int, whose signed depends on variate 'unsigned' and
+            length of bits depends on variate 'bit_len', from bytedatas.
+            """
+            value = 0
+            for i in range(byte_len):
+                value += super(ByteDatas, self).__getitem__(seat+i) << (i*8)
+            return value
 
+        # call parament_int function to generate an appropriate decorator 
+        # for method
+        return return_int(bit_len, unsigned=unsigned)(read_method)
+        
     # @parament_int(8)
     # def write_int8(self, seat, value):
         # """
@@ -161,11 +172,11 @@ class ByteDatas(bytearray):
         # super().__setitem__(seat, value)
         # return True
 
-    @return_int(8)
-    def read_int8(self, seat):
-        """
-        Read an 8-bit-length int from bytearray
-        """
-        return super().__getitem__(seat)
+    # @return_int(8)
+    # def read_int8(self, seat):
+        # """
+        # Read an 8-bit-length int from bytearray
+        # """
+        # return super().__getitem__(seat)
 
 
