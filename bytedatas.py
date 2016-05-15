@@ -156,32 +156,34 @@ class ByteDatas(bytearray):
         # for method
         return return_int(bit_len, unsigned=unsigned)(read_method)
 
-    def write_series_bytes(self, seat, series_bytes, limit=0):
+    def write_series_bytes(self, seat, series_bytes, length):
         """
         write a series bytes into the bytedatas, and return the number of writen bytes,
         if a error happened, return 0
-        if limit is 0 , this means it has no limit
         """
         if not isinstance(series_bytes, (bytes, bytearray)):
             # series_bytes should be instance of bytes or bytearray
-            return 0
+            return False
 
-        result = 0
+        count = 0
         for index, value in enumerate(series_bytes):
-            if limit == 0 or index < limit:
+            if index < length:
                 super().__setitem__(seat+index, value)
-                result += 1
+                count += 1
 
-        return result
+        for index in range(count, length):
+            super().__setitem__(seat+count, 0)
 
-    def read_series_bytes(self, seat, limit):
+        return True
+
+    def read_series_bytes(self, seat, length):
         """
         read  a series of bytes from bytedatas
-        "limit" is number of the bytes
+        "length" is number of the bytes
         """
         len_of_bytedatas = len(self)
-        if seat+limit < len_of_bytedatas:
-            return self[seat:seat+limit]
+        if seat+length < len_of_bytedatas:
+            return self[seat:seat+length]
         else:
             return self[seat:len_of_bytedatas]
         
