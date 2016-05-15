@@ -58,4 +58,10 @@ def test_bytedatas():
     assert bds.write_int32(27, -2**31-100) is False
     assert bds.write_int32(31, 2**31+100) is False
 
+    # bytes 
+    series_bytes = b"test write seires bytes"
+    assert bds.write_series_bytes(60, series_bytes) == len(series_bytes)
+    assert bds.read_series_bytes(60, len(series_bytes)) == series_bytes
+    assert bds.write_series_bytes(90, "it is failed") == 0
+
 

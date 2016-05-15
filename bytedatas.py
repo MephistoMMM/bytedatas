@@ -155,6 +155,35 @@ class ByteDatas(bytearray):
         # call parament_int function to generate an appropriate decorator 
         # for method
         return return_int(bit_len, unsigned=unsigned)(read_method)
+
+    def write_series_bytes(self, seat, series_bytes, limit=0):
+        """
+        write a series bytes into the bytedatas, and return the number of writen bytes,
+        if a error happened, return 0
+        if limit is 0 , this means it has no limit
+        """
+        if not isinstance(series_bytes, (bytes, bytearray)):
+            # series_bytes should be instance of bytes or bytearray
+            return 0
+
+        result = 0
+        for index, value in enumerate(series_bytes):
+            if limit == 0 or index < limit:
+                super().__setitem__(seat+index, value)
+                result += 1
+
+        return result
+
+    def read_series_bytes(self, seat, limit):
+        """
+        read  a series of bytes from bytedatas
+        "limit" is number of the bytes
+        """
+        len_of_bytedatas = len(self)
+        if seat+limit < len_of_bytedatas:
+            return self[seat:seat+limit]
+        else:
+            return self[seat:len_of_bytedatas]
         
     # @parament_int(8)
     # def write_int8(self, seat, value):
